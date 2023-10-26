@@ -118,10 +118,50 @@
         }
     }
 
+  
     public function delete() {
-        // Lógica para eliminar un producto
-        echo json_encode(['message' => 'Eliminar un producto']);
+        // Lógica para eliminar un libro existente
+        echo json_encode(['message' => 'Eliminar un libro existente']);
+        try {
+            // Obtener datos del cuerpo de la solicitud en formato JSON
+            $data = json_decode(file_get_contents("php://input"));
+    
+            // Validar y procesar los datos recibidos
+            if (!empty($data->id)) {
+                // Eliminar el libro de la base de datos
+                $query = "DELETE FROM tabla_libros WHERE id = :id";
+                $stmt = $this->bd->prepare($query);
+                $stmt->bindParam(":id", $data->id, PDO::PARAM_INT);
+    
+                if ($stmt->execute()) {
+                    // Verificar si se eliminó algún registro
+                    if ($stmt->rowCount() > 0) {
+                        // Devolver una respuesta exitosa
+                        http_response_code(200); // OK
+                        echo json_encode(array("message" => "Libro eliminado exitosamente."));
+                    } else {
+                        // En caso de que no se haya eliminado ningún registro
+                        http_response_code(404); // No encontrado
+                        echo json_encode(array("message" => "No se encontró el libro a eliminar."));
+                    }
+                } else {
+                    // En caso de error al eliminar
+                    http_response_code(500); // Error interno del servidor
+                    echo json_encode(array("message" => "No se pudo eliminar el libro."));
+                }
+            } else {
+                // En caso de datos insuficientes o incorrectos
+                http_response_code(400); // Solicitud incorrecta
+                echo json_encode(array("message" => "ID del libro no especificado o incorrecto."));
+            }
+        } catch (PDOException $e) {
+            // Manejo de errores
+            http_response_code(500); // Error interno del servidor
+            echo json_encode(array("message" => "Error en la consulta: " . $e->getMessage()));
+        }
     }
+    
+    
 }
         
 ?>
